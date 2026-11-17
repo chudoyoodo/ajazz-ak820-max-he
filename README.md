@@ -17,7 +17,7 @@
 > **English:** Offline desktop driver and configurator for the **Ajazz AK820 Max HE** magnetic Hall-Effect keyboard (`VID: 0x0c45`, `PID: 0x80b1`) for **Windows** and **Linux**. Works completely offline without the official web driver. Supports RGB lighting, 0.01 mm Rapid Trigger, Rappy Snappy, SOCD, DKS, Key Remapping (Normal/Fn/Mod-Tap/Toggle), Macros, 8000 Hz polling rate, Dead Zones, and Hall sensor calibration.
 
 - **Windows (готовый файл без установки):** скачайте **`AjazzControl.exe`** и контрольную сумму **`AjazzControl.exe.sha256`** из раздела **[GitHub Releases](../../releases)** (бинарник автоматически собирается из исходного кода через GitHub Actions).
-- **Linux:** клонируйте репозиторий (`git clone https://://github.com`) и запустите `python main.py` (подробная инструкция по правам `udev` — в разделе ниже).
+- **Linux:** клонируйте репозиторий (`git clone https://github.com/chudoyoodo/ajazz-ak820-max-he.git`) и запустите `python main.py` (подробная инструкция по правам `udev` — в разделе ниже).
 
 ---
 
@@ -74,8 +74,8 @@
 ### 4.1. Arch Linux
 1. **Права доступа без `sudo` (`/etc/udev/rules.d/99-ajazz-ak820.rules`):**
    ```udev
-   SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="80b1", MODE="0666"
-   SUBSYSTEM=="usb", ATTR{idVendor}=="0c45", ATTR{idProduct}=="80b1", MODE="0666"
+   SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="80b1", TAG+="uaccess"
+   SUBSYSTEM=="usb", ATTR{idVendor}=="0c45", ATTR{idProduct}=="80b1", TAG+="uaccess"
    ```
    Применение: `sudo udevadm control --reload-rules && sudo udevadm trigger` (затем переподключить USB-кабель).
 2. **Запуск GUI:**
