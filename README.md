@@ -6,7 +6,6 @@
 ## Скриншоты интерфейса (Screenshots)
 
 ![Main Window](docs/screen.png)
-![Switch Travel](docs/preview_switches.png)
 
 ---
 
