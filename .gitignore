@@ -1,0 +1,11 @@
+ajazz-env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.spec
+build/
+dist/
+*.exe
+crash.log
+.vscode/
+.idea/
