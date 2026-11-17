@@ -1,0 +1,40 @@
+name: Build Windows Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install PySide6 hidapi pyinstaller
+
+      - name: Build AjazzControl.exe
+        run: |
+          pyinstaller --noconsole --onefile --clean --name "AjazzControl" main.py
+          certutil -hashfile dist\AjazzControl.exe SHA256 > dist\AjazzControl.exe.sha256
+
+      - name: Upload to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/AjazzControl.exe
+            dist/AjazzControl.exe.sha256

@@ -16,8 +16,16 @@
 
 > **English:** Offline desktop driver and configurator for the **Ajazz AK820 Max HE** magnetic Hall-Effect keyboard (`VID: 0x0c45`, `PID: 0x80b1`) for **Windows** and **Linux**. Works completely offline without the official web driver. Supports RGB lighting, 0.01 mm Rapid Trigger, Rappy Snappy, SOCD, DKS, Key Remapping (Normal/Fn/Mod-Tap/Toggle), Macros, 8000 Hz polling rate, Dead Zones, and Hall sensor calibration.
 
-- **Windows (готовый файл без установки):** откройте **[AjazzControl.exe (v1.0.0)](../../blob/bin/AjazzControl.exe)**, нажмите кнопку **Download raw file** справа сверху и запустите скачанный файл двойным кликом.
+- **Windows (готовый файл без установки):** скачайте **`AjazzControl.exe`** и контрольную сумму **`AjazzControl.exe.sha256`** из раздела **[GitHub Releases](../../releases)** (бинарник автоматически собирается из исходного кода через GitHub Actions).
 - **Linux:** клонируйте репозиторий (`git clone https://github.com`) и запустите `python main.py` (подробная инструкция по правам `udev` и сборке из исходников — в разделе ниже).
+
+---
+
+### Поддерживаемые версии и важная информация (Compatibility & Disclaimer)
+
+- **Протестированная модель:** разработка и проверка проводились на **проводной версии Ajazz AK820 Max HE (8000 Hz, USB `VID: 0x0c45`, `PID: 0x80b1`)**. Работа с версией **Tri-mode** (особенно через радиоканал 2.4 ГГц или Bluetooth) не проверялась — при подключении по кабелю она может работать, но беспроводной донгл часто имеет другой `PID` или иной формат пакетов.
+- **Протокол и безопасность:** протокол обмена по USB HID разобран автором самостоятельно (см. `PROTOCOL_RUNBOOK.md`). Кнопка **«Общий сброс»** отправляет стандартную команду прошивки (`0xaa, 0x0f, 0xff`), которая сбрасывает настройки клавиатуры к заводским значениям и очищает локальный файл состояния. Используйте на свой страх и риск.
+- **Лицензия:** проект распространяется под открытой лицензией [MIT](LICENSE).
 
 ---
 
