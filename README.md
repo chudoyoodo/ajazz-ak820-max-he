@@ -2,7 +2,14 @@
 
 Кроссплатформенное десктопное приложение (Arch Linux / Windows) для полного управления магнитной клавиатурой **Ajazz AK820 Max HE** (`VID: 0x0c45`, `PID: 0x80b1`) по USB HID без проприетарного софта.
 
+
+## Скриншоты интерфейса (Screenshots)
+
+![Main Window](docs/screen.png)
+![Switch Travel](docs/preview_switches.png)
+
 ---
+
 
 ## 1. Структура проекта (`~/AK820/`)
 
