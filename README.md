@@ -17,7 +17,7 @@
 > **English:** Offline desktop driver and configurator for the **Ajazz AK820 Max HE** magnetic Hall-Effect keyboard (`VID: 0x0c45`, `PID: 0x80b1`) for **Windows** and **Linux**. Works completely offline without the official web driver. Supports RGB lighting, 0.01 mm Rapid Trigger, Rappy Snappy, SOCD, DKS, Key Remapping (Normal/Fn/Mod-Tap/Toggle), Macros, 8000 Hz polling rate, Dead Zones, and Hall sensor calibration.
 
 - **Windows (готовый файл без установки):** скачайте **`AjazzControl.exe`** и контрольную сумму **`AjazzControl.exe.sha256`** из раздела **[GitHub Releases](../../releases)** (бинарник автоматически собирается из исходного кода через GitHub Actions).
-- **Linux:** клонируйте репозиторий (`git clone https://github.com`) и запустите `python main.py` (подробная инструкция по правам `udev` и сборке из исходников — в разделе ниже).
+- **Linux:** клонируйте репозиторий (`git clone https://://github.com`) и запустите `python main.py` (подробная инструкция по правам `udev` — в разделе ниже).
 
 ---
 
@@ -89,7 +89,7 @@
    pip install PySide6 hidapi pyinstaller
    pyinstaller --noconsole --onefile --clean --name "AjazzControl" main.py
    ```
-2. **Кросс-сборка из Arch Linux через Wine (`~/.wine_ajazz`):**
+2. **Локальная кросс-сборка из Arch Linux через Wine (опционально, для самостоятельной сборки без GitHub Actions):**
    ```bash
    mkdir -p /tmp/winbuild && ~/AK820/ajazz-env/bin/python -c '
    import urllib.request
