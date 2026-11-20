@@ -75,8 +75,13 @@ class ColorPickerDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle(t["color_title"])
         base_dir = getattr(sys, "_MEIPASS", os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        for ic_name in ("icon.svg", "icon.png", "icon.ico"):
-            ic_path = os.path.join(base_dir, "assets", ic_name)
+        for ic_path in (
+            os.path.join(base_dir, "assets", "icon.ico"),
+            os.path.join(base_dir, "icon.ico"),
+            os.path.join(base_dir, "assets", "icon.png"),
+            os.path.join(base_dir, "icon.png"),
+            os.path.join(base_dir, "assets", "icon.svg"),
+        ):
             if os.path.exists(ic_path):
                 self.setWindowIcon(QIcon(ic_path))
                 break

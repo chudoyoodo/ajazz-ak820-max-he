@@ -1,5 +1,7 @@
 import sys
 import traceback
+import os
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMessageBox
 from ajazz_app.gui import AjazzWindow
 
@@ -14,6 +16,11 @@ sys.excepthook = handle_exception
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    _bd = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    for _p in (os.path.join(_bd, "assets", "icon.ico"), os.path.join(_bd, "icon.ico"), os.path.join(_bd, "assets", "icon.png"), os.path.join(_bd, "icon.png")):
+        if os.path.exists(_p):
+            app.setWindowIcon(QIcon(_p))
+            break
     app.setStyle("Fusion")
     win = AjazzWindow()
     win.show()
