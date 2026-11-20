@@ -264,7 +264,7 @@ class AjazzWindow(QWidget):
         self.btn_rst.setStyleSheet("QPushButton { background-color: #3b1d1e; border: 1px solid #f28b82; color: #f28b82; font-weight: 600; border-radius: 18px; padding: 9px 22px; } QPushButton:hover { background-color: #4f2527; }")
         self.btn_rst.clicked.connect(self._on_factory_reset)
         self.btn_apply_all = QPushButton("Применить")
-        self.btn_apply_all.setObjectName("primary")
+        self.btn_apply_all.setStyleSheet("QPushButton { background-color: #a8c7fa; color: #062e6f; font-weight: 600; border: none; border-radius: 18px; padding: 9px 24px; } QPushButton:hover { background-color: #c2d7fb; }")
         self.btn_apply_all.clicked.connect(self._apply_current_tab)
         uni_bar.addWidget(self.btn_rst)
         uni_bar.addStretch()
@@ -1415,9 +1415,9 @@ class AjazzWindow(QWidget):
         ok = self.ctrl.is_connected()
         t = STRINGS[self.lang]
         self.btn_apply_all.setText(t["btn_written"] if ok else t["no_conn"])
-        self.btn_apply_all.setStyleSheet("background-color: #81c995; color: #062e16; font-weight: 600;" if ok else "background-color: #f28b82; color: #3c0806; font-weight: 600;")
+        self.btn_apply_all.setStyleSheet("QPushButton { background-color: #81c995; color: #062e16; font-weight: 600; border: none; border-radius: 18px; padding: 9px 24px; }" if ok else "QPushButton { background-color: #f28b82; color: #3c0806; font-weight: 600; border: none; border-radius: 18px; padding: 9px 24px; }")
         self._log(t["log_apply_all"] if ok else t["log_err"], ok)
-        QTimer.singleShot(1600, lambda: (self.btn_apply_all.setText(t["btn_apply_all"]), self.btn_apply_all.setStyleSheet("")))
+        QTimer.singleShot(1600, lambda: (self.btn_apply_all.setText(t["btn_apply_all"]), self.btn_apply_all.setStyleSheet("QPushButton { background-color: #a8c7fa; color: #062e6f; font-weight: 600; border: none; border-radius: 18px; padding: 9px 24px; } QPushButton:hover { background-color: #c2d7fb; }")))
 
     def _set_lang(self, lang: str, save: bool = True):
         self.lang = lang if lang in STRINGS else "ru"
