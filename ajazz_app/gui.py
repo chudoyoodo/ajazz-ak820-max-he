@@ -8,7 +8,7 @@ from PySide6.QtCore import Qt, QTimer, QEvent, QSize, Signal, QPropertyAnimation
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QColor, QPixmap, QPainter, QIcon, QPen, QLinearGradient
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QStackedWidget,
+    QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QPushButton, QLabel, QStackedWidget,
     QComboBox, QCheckBox, QMessageBox, QDialog, QGraphicsOpacityEffect, QInputDialog, QGroupBox, QListWidget, QListView, QFrame
 )
 from .core import AjazzController, EFFECTS
@@ -257,8 +257,19 @@ class AjazzWindow(QWidget):
         self.stack.addWidget(self._build_custom_tab())
         self.stack.addWidget(self._build_macro_tab())
         self.stack.addWidget(self._build_dks_tab())
-        self.stack.addWidget(self._build_calib_tab())
         r_lay.addWidget(self.stack, 1)
+        uni_bar = QHBoxLayout()
+        uni_bar.setContentsMargins(16, 0, 16, 4)
+        self.btn_rst = QPushButton("Общий сброс")
+        self.btn_rst.setStyleSheet("QPushButton { background-color: #3b1d1e; border: 1px solid #f28b82; color: #f28b82; font-weight: 600; border-radius: 18px; padding: 9px 22px; } QPushButton:hover { background-color: #4f2527; }")
+        self.btn_rst.clicked.connect(self._on_factory_reset)
+        self.btn_apply_all = QPushButton("Применить")
+        self.btn_apply_all.setObjectName("primary")
+        self.btn_apply_all.clicked.connect(self._apply_current_tab)
+        uni_bar.addWidget(self.btn_rst)
+        uni_bar.addStretch()
+        uni_bar.addWidget(self.btn_apply_all)
+        r_lay.addLayout(uni_bar)
 
         main_lay.addWidget(right_area, 1)
         for cb in self.findChildren(QComboBox):
@@ -304,12 +315,11 @@ class AjazzWindow(QWidget):
 
         items = [
             "Подсветка и эффекты",
-            "Ход свитчей (RT)",
+            "Ход свитчей и система",
             "Rappy Snappy / SOCD",
             "Custom Keys / MT",
             "Макросы (Shortcuts)",
             "DKS (Динамический ход)",
-            "Система и калибровка"
         ]
         for idx, text in enumerate(items):
             btn = QPushButton(text)
@@ -326,7 +336,6 @@ class AjazzWindow(QWidget):
             "Переназначение клавиш на слоях Normal/Fn, Mod-Tap и Toggle",
             "Запись и привязка последовательностей нажатий с задержками",
             "Dynamic Key Stroke: до 4 действий на разной глубине нажатия одной клавиши",
-            "Частота опроса (до 8000 Гц), мёртвые зоны и калибровка датчиков Холла"
         ]
         for btn, tip in zip(self.nav_buttons, tips):
             btn.setToolTip(tip)
@@ -664,6 +673,7 @@ class AjazzWindow(QWidget):
             self._log(t["log_ok"].format(act=act) if ok else t["log_err"], ok)
             QTimer.singleShot(1600, lambda: (btn.setText(btn._orig_text), btn.setStyleSheet("")))
         btn.clicked.connect(on_click)
+        btn.hide()
         row.addWidget(btn)
         return row
 
@@ -756,44 +766,94 @@ class AjazzWindow(QWidget):
         )
 
     def _build_switch_tab(self):
-        w, lay = make_card("Настройка магнитных свитчей и Rapid Trigger")
+        w, lay = make_card("Магнитные свитчи, Rapid Trigger и системные параметры")
+        cols = QHBoxLayout()
+        cols.setSpacing(20)
+
+        left = QGridLayout()
+        left.setHorizontalSpacing(36)
+        left.setVerticalSpacing(22)
 
         top = QHBoxLayout()
-        top.setSpacing(14)
+        top.setSpacing(10)
         self.lbl_ax = QLabel("Модель свитча:")
         top.addWidget(self.lbl_ax)
         self.cb_axle = QComboBox()
-        self.cb_axle.addItem("Magnetic Rice Switch (4.0 мм)", 0x01)
-        self.cb_axle.addItem("Magnetic Jade Pro / Magneto (3.5 мм)", 0x03)
-        self.cb_axle.setToolTip("Выбор модели магнитного свитча для точного расчёта кривой датчика Холла")
+        self.cb_axle.addItem("Magnetic Rice (4.0 мм)", 0x01)
+        self.cb_axle.addItem("Magnetic Jade Pro (3.5 мм)", 0x03)
         top.addWidget(self.cb_axle)
-
         self.chk_ft = QCheckBox("Fast Trigger (RT)")
         self.chk_ft.setChecked(True)
-        self.chk_ft.setToolTip("Динамическое срабатывание и сброс клавиши при движении вниз/вверх без возврата к статической точке")
         top.addWidget(self.chk_ft)
-
         self.chk_full = QCheckBox("RT по всему ходу")
-        self.chk_full.setToolTip("Включено: Fast Trigger работает сразу от самого верха (0.00 мм), точка срабатывания игнорируется.\nВыключено: Fast Trigger включается только после прохождения точки срабатывания.")
         top.addWidget(self.chk_full)
+        left.addLayout(top, 0, 0, Qt.AlignVCenter)
 
-        top.addStretch()
-        lay.addLayout(top)
+        self.chk_dz = QCheckBox("Dead Zone"); self.chk_dz.setStyleSheet("margin-left: 20px;")
+        self.chk_dz.setChecked(True)
+        left.addWidget(self.chk_dz, 0, 1, Qt.AlignLeft | Qt.AlignVCenter)
 
-        knobs = QHBoxLayout()
+        knobs_sw = QHBoxLayout()
+        knobs_sw.setSpacing(12)
         self.knob_trig = RotaryKnob("Точка срабатывания", 0.10, 4.00, 1.50, step=0.05, suffix=" мм")
-        self.knob_trig.setToolTip("Глубина нажатия для срабатывания (или порог активации Fast Trigger, если выключен режим по всему ходу)")
         self.knob_press = RotaryKnob("Press (нажатие)", 0.02, 2.00, 0.30, step=0.02, suffix=" мм")
-        self.knob_press.setToolTip("На сколько миллиметров нужно дожать клавишу вниз для повторного срабатывания")
         self.knob_rel = RotaryKnob("Release (сброс)", 0.02, 2.00, 0.20, step=0.02, suffix=" мм")
-        self.knob_rel.setToolTip("На сколько миллиметров нужно приподнять палец вверх для мгновенного отпускания клавиши")
-        knobs.addWidget(self.knob_trig)
-        knobs.addWidget(self.knob_press)
-        knobs.addWidget(self.knob_rel)
-        knobs.addStretch()
-        lay.addLayout(knobs)
-        lay.addStretch()
-        lay.addLayout(self._footer_btn("Записать настройки свитчей", self._apply_switch))
+        for kb in (self.knob_trig, self.knob_press, self.knob_rel):
+            knobs_sw.addWidget(kb, 0, Qt.AlignTop)
+        left.addLayout(knobs_sw, 1, 0, Qt.AlignTop)
+
+        knobs_dz = QHBoxLayout()
+        knobs_dz.setSpacing(12)
+        self.knob_dz_t = RotaryKnob("Top Dead Zone", 0.00, 1.00, 0.30, step=0.05, suffix=" мм")
+        self.knob_dz_b = RotaryKnob("Bottom Dead Zone", 0.00, 1.00, 0.30, step=0.05, suffix=" мм")
+        knobs_dz.addWidget(self.knob_dz_t, 0, Qt.AlignTop)
+        knobs_dz.addWidget(self.knob_dz_b, 0, Qt.AlignTop)
+        self.chk_dz.toggled.connect(lambda dz: (self.knob_dz_t.setEnabled(dz), self.knob_dz_b.setEnabled(dz)))
+        left.addLayout(knobs_dz, 1, 1, Qt.AlignTop)
+
+        left.setColumnStretch(2, 1)
+        left.setRowStretch(2, 1)
+
+        vline = QFrame()
+        vline.setFixedWidth(1)
+        vline.setStyleSheet("border: none; background-color: #252832;")
+
+        right = QVBoxLayout()
+        right.setSpacing(14)
+        sys_top = QHBoxLayout()
+        sys_top.setSpacing(10)
+        self.lbl_rate = QLabel("Частота опроса:")
+        sys_top.addWidget(self.lbl_rate)
+        self.cb_rate = QComboBox()
+        self.cb_rate.addItems(["1000 Гц (1K)", "4000 Гц (4K)", "8000 Гц (8K)"])
+        self.cb_rate.setCurrentIndex(2)
+        self.chk_stab = QCheckBox("Stability Mode"); self.chk_stab.setChecked(True)
+        self.chk_adap = QCheckBox("Adaptive Calibration"); self.chk_adap.setChecked(True)
+        for item in (self.cb_rate, self.chk_stab, self.chk_adap):
+            sys_top.addWidget(item)
+        sys_top.addStretch()
+        right.addLayout(sys_top)
+        right.addSpacing(18)
+
+        cal_btns = QHBoxLayout()
+        cal_btns.setSpacing(8)
+        self.btn_cal_start = QPushButton("Старт калибровки"); self.btn_cal_start.clicked.connect(self._cal_start)
+        self.btn_cal_clear = QPushButton("Сброс (Clear)"); self.btn_cal_clear.setEnabled(False); self.btn_cal_clear.clicked.connect(self._cal_clear)
+        self.btn_cal_save = QPushButton("Применить (Save)"); self.btn_cal_save.setEnabled(False); self.btn_cal_save.clicked.connect(self._cal_save)
+        for b in (self.btn_cal_start, self.btn_cal_clear, self.btn_cal_save):
+            cal_btns.addWidget(b)
+        cal_btns.addStretch()
+        right.addLayout(cal_btns)
+
+        self.lbl_cal = QLabel("Нажмите «Старт» и прожмите нужные клавиши до упора.")
+        self.lbl_cal.setWordWrap(True)
+        right.addWidget(self.lbl_cal)
+        right.addStretch()
+
+        cols.addLayout(left, 1)
+        cols.addWidget(vline)
+        cols.addLayout(right, 1)
+        lay.addLayout(cols)
 
         self.chk_ft.toggled.connect(self._update_switch_ui_state)
         self.chk_full.toggled.connect(self._update_switch_ui_state)
@@ -1312,7 +1372,7 @@ class AjazzWindow(QWidget):
         self.cb_rate.setCurrentIndex(2)
         self.chk_stab = QCheckBox("Stability Mode"); self.chk_stab.setChecked(True)
         self.chk_adap = QCheckBox("Adaptive Calibration"); self.chk_adap.setChecked(True)
-        self.chk_dz = QCheckBox("Dead Zone"); self.chk_dz.setChecked(True)
+        self.chk_dz = QCheckBox("Dead Zone"); self.chk_dz.setStyleSheet("margin-left: 11px;"); self.chk_dz.setChecked(True)
         for item in (self.cb_rate, self.chk_stab, self.chk_adap, self.chk_dz): top.addWidget(item)
         top.addStretch(); lay.addLayout(top)
         knobs = QHBoxLayout()
@@ -1337,6 +1397,28 @@ class AjazzWindow(QWidget):
         lay.addLayout(row_sys)
         return w
 
+    def _apply_current_tab(self):
+        idx = self.stack.currentIndex()
+        if idx == 0:
+            self._apply_light()
+        elif idx == 1:
+            self._apply_switch()
+            self._apply_sys()
+        elif idx == 2:
+            self._apply_adv()
+        elif idx == 3:
+            self._apply_custom()
+        elif idx == 4:
+            self._save_macro()
+        elif idx == 5:
+            self._apply_dks()
+        ok = self.ctrl.is_connected()
+        t = STRINGS[self.lang]
+        self.btn_apply_all.setText(t["btn_written"] if ok else t["no_conn"])
+        self.btn_apply_all.setStyleSheet("background-color: #81c995; color: #062e16; font-weight: 600;" if ok else "background-color: #f28b82; color: #3c0806; font-weight: 600;")
+        self._log(t["log_apply_all"] if ok else t["log_err"], ok)
+        QTimer.singleShot(1600, lambda: (self.btn_apply_all.setText(t["btn_apply_all"]), self.btn_apply_all.setStyleSheet("")))
+
     def _set_lang(self, lang: str, save: bool = True):
         self.lang = lang if lang in STRINGS else "ru"
         self.btn_ru.setChecked(self.lang == "ru")
@@ -1351,8 +1433,8 @@ class AjazzWindow(QWidget):
         self.btn_prof_save.setText(t["prof_save"])
         self.btn_prof_del.setText(t["prof_del"])
         if hasattr(self.kb_box, "_title_lbl"): self.kb_box._title_lbl.setText(t["kb_title"])
-        cards = [self.stack.widget(i) for i in range(7)]
-        c_keys = ["card_light", "card_sw", "card_adv", "card_cust", "card_mac", "card_dks", "card_sys"]
+        cards = [self.stack.widget(i) for i in range(6)]
+        c_keys = ["card_light", "card_sw", "card_adv", "card_cust", "card_mac", "card_dks"]
         for cw, ck in zip(cards, c_keys):
             if hasattr(cw, "_title_lbl"):
                 cw._title_lbl.setText(t[ck])
@@ -1383,6 +1465,7 @@ class AjazzWindow(QWidget):
         self.btn_cal_clear.setText(t["btn_cal_clear"])
         self.btn_cal_save.setText(t["btn_cal_save"])
         self.btn_rst.setText(t["btn_factory"])
+        self.btn_apply_all.setText(t["btn_apply_all"])
         for i, b in enumerate(self.nav_buttons):
             b.setToolTip(t[f"tip_{i}"])
         self.lbl_adv_m.setText(t["lbl_mode"])
@@ -1404,11 +1487,12 @@ class AjazzWindow(QWidget):
             self.lbl_dks_key.setText(t["dks_none"])
         for idx_d, (btn_d, (_, lbl_d)) in enumerate(zip(self.dks_btns, self.dks_keys)):
             btn_d.setText(f"{t['dks_pt']} {idx_d+1}: {lbl_d}")
+        self.lbl_rate.setText(t["lbl_rate"])
         for idx_r in range(3):
             self.cb_rate.setItemText(idx_r, t[f"rate_{idx_r}"])
         if not self.is_calibrating:
             self.lbl_cal.setText(t["cal_hint"])
-        f_keys = ["btn_apply_light", "btn_apply_sw", "btn_apply_adv", "btn_apply_cust", "btn_apply_mac", "btn_apply_dks", "btn_apply_sys"]
+        f_keys = ["btn_apply_light", "btn_apply_sw", "btn_apply_adv", "btn_apply_cust", "btn_apply_mac", "btn_apply_dks"]
         for cw, fk in zip(cards, f_keys):
             for b in cw.findChildren(QPushButton):
                 if b.objectName() == "primary":
@@ -1724,6 +1808,8 @@ class AjazzWindow(QWidget):
         dlg.setTextValue(cur)
         dlg.setOkButtonText(STRINGS[self.lang]["save_btn"])
         dlg.setCancelButtonText(STRINGS[self.lang]["cancel_btn"])
+        dlg.show()
+        for b in dlg.findChildren(QPushButton): b.setIcon(QIcon())
         ok = (dlg.exec() == QDialog.Accepted)
         name = dlg.textValue()
         name = name.strip()
