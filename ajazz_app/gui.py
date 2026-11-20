@@ -74,6 +74,12 @@ class ColorPickerDialog(QDialog):
         t = STRINGS.get(lang, STRINGS['ru'])
         super().__init__(parent)
         self.setWindowTitle(t["color_title"])
+        base_dir = getattr(sys, "_MEIPASS", os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        for ic_name in ("icon.svg", "icon.png", "icon.ico"):
+            ic_path = os.path.join(base_dir, "assets", ic_name)
+            if os.path.exists(ic_path):
+                self.setWindowIcon(QIcon(ic_path))
+                break
         self.setFixedSize(360, 290)
         self.color = QColor(initial)
         if self.color.value() < 40:
